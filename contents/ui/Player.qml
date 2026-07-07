@@ -1,9 +1,13 @@
 import QtQuick 2.15
 import QtQml.Models 2.3
 import org.kde.plasma.private.mpris as Mpris
+import org.kde.plasma.workspace.dbus 1.0 as DBus
 
 QtObject {
     id: root
+
+    // KWin script that finds and activates SPlayer by window caption
+    readonly property string _raiseScriptPath: "/home/neclyon/.local/share/plasma/plasmoids/plasmusic-toolbar/contents/scripts/raise_splayer.js"
 
     property var mpris2Model: Mpris.Mpris2Model {
         readonly property alias preferredSourceIdentity: root.sourceIdentity
@@ -13,7 +17,6 @@ QtObject {
 
         function updatePlayerIndex(model) {
             if (!preferredSourceIdentity) {
-                // Choose the multiplex source when no preferred source is set
                 model.currentIndex = 0;
                 return;
             }
@@ -54,11 +57,9 @@ QtObject {
     readonly property bool canPlay: ready ? mpris2Model.currentPlayer.canPlay : false
     readonly property bool canPause: ready ? mpris2Model.currentPlayer.canPause : false
     readonly property bool canSeek: ready ? mpris2Model.currentPlayer.canSeek : false
-    readonly property bool canRaise: ready ? mpris2Model.currentPlayer.canRaise : false
+    // SPlayer's MPRIS2 CanRaise is false, but its window can be raised via KWin
+    readonly property bool canRaise: ready ? (mpris2Model.currentPlayer.canRaise || identity.toLowerCase().indexOf("splayer") >= 0) : false
 
-    // To know whether Shuffle and Loop can be changed we have to check if the property is defined,
-    // unlike the other commands, LoopStatus and Shuffle hasn't a specific propety such as
-    // CanPause, CanSeek, etc.
     readonly property bool canChangeShuffle: ready ? mpris2Model.currentPlayer.shuffle != undefined : false
     readonly property bool canChangeLoopStatus: ready ? mpris2Model.currentPlayer.loopStatus != undefined : false
 
@@ -99,6 +100,45 @@ QtObject {
     }
 
     function raise() {
+        if (identity.toLowerCase().indexOf("splayer") >= 0) {
+            raiseSPlayerViaKWin();
+        }
         mpris2Model.currentPlayer.Raise();
+    }
+
+    function raiseSPlayerViaKWin() {
+        var loadReply = DBus.SessionBus.asyncCall({
+            service: "org.kde.KWin",
+            path: "/Scripting",
+            iface: "org.kde.kwin.Scripting",
+            member: "loadScript",
+            arguments: [_raiseScriptPath, "splayer_raise"]
+        } as DBus.dbusMessage);
+
+        loadReply.finished.connect(function() {
+            if (loadReply.isError) { loadReply.destroy(); return; }
+            var scriptId = loadReply.value;
+            loadReply.destroy();
+            if (scriptId === undefined || scriptId < 0) return;
+
+            var runReply = DBus.SessionBus.asyncCall({
+                service: "org.kde.KWin",
+                path: "/Scripting/Script" + scriptId,
+                iface: "org.kde.kwin.Script",
+                member: "run"
+            } as DBus.dbusMessage);
+
+            runReply.finished.connect(function() {
+                runReply.destroy();
+                var unloadReply = DBus.SessionBus.asyncCall({
+                    service: "org.kde.KWin",
+                    path: "/Scripting",
+                    iface: "org.kde.kwin.Scripting",
+                    member: "unloadScript",
+                    arguments: ["splayer_raise"]
+                } as DBus.dbusMessage);
+                unloadReply.finished.connect(function() { unloadReply.destroy(); });
+            });
+        });
     }
 }
