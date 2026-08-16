@@ -37,6 +37,7 @@ PlasmoidItem {
     property int coverRadius: plasmoid.configuration.coverRadius
     property bool showCover: plasmoid.configuration.showCover
     property string currentCoverUrl: ""
+    readonly property string preferredCoverUrl: player.artUrl || currentCoverUrl
     property int coverRefreshNonce: 0
     property string lastCoverRequestKey: ""
     property bool showBackground: plasmoid.configuration.showBackground
@@ -185,6 +186,35 @@ PlasmoidItem {
         }
     }
 
+    // Prefer the configured SPlayer WebSocket while it is online, then use MPRIS.
+    readonly property bool splayerControlsAvailable: wsEnabled && splayerOnline && wsClient !== null
+
+    function sendSPlayerControl(command) {
+        if (!splayerControlsAvailable)
+            return false;
+        sendWsJson({
+            "type": "control",
+            "data": { "command": command }
+        });
+        splayerControlRefreshTimer.restart();
+        return true;
+    }
+
+    function togglePlayback() {
+        if (!sendSPlayerControl("toggle"))
+            player.playPause();
+    }
+
+    function previousTrack() {
+        if (!sendSPlayerControl("prev"))
+            player.previous();
+    }
+
+    function nextTrack() {
+        if (!sendSPlayerControl("next"))
+            player.next();
+    }
+
     function normalizeCoverUrl(raw, forceRefresh) {
         var cleaned = String(raw || "").replace(/[`\s]/g, "");
         if (cleaned === "")
@@ -252,9 +282,9 @@ PlasmoidItem {
             if (isSongChanged)
                 coverRefreshNonce = Date.now();
             if (data.playStatus !== undefined)
-                isPlaying = (String(data.playStatus) === "true" || String(data.playStatus) === "playing");
+                isPlaying = (String(data.playStatus) === "true" || String(data.playStatus) === "play" || String(data.playStatus) === "playing");
             else if (data.status !== undefined)
-                isPlaying = (String(data.status) === "true" || String(data.status) === "playing");
+                isPlaying = (String(data.status) === "true" || String(data.status) === "play" || String(data.status) === "playing");
             if (data.currentTime !== undefined)
                 syncTime(Number(data.currentTime) || 0);
             var coverUrl = extractCoverUrl(data, isSongChanged);
@@ -296,10 +326,14 @@ PlasmoidItem {
         }
         if (type === "status-change") {
             if (data.playStatus !== undefined)
-                isPlaying = (String(data.playStatus) === "true" || String(data.playStatus) === "playing");
+                isPlaying = (String(data.playStatus) === "true" || String(data.playStatus) === "play" || String(data.playStatus) === "playing");
             else if (data.status !== undefined)
-                isPlaying = (String(data.status) === "true" || String(data.status) === "playing");
+                isPlaying = (String(data.status) === "true" || String(data.status) === "play" || String(data.status) === "playing");
             updateAutoHideState();
+            return;
+        }
+        if (type === "control-response") {
+            splayerControlRefreshTimer.restart();
             return;
         }
         if (type === "progress-change") {
@@ -514,6 +548,13 @@ PlasmoidItem {
         repeat: true
         running: false
         onTriggered: widget.tryReconnectWs()
+    }
+
+    Timer {
+        id: splayerControlRefreshTimer
+        interval: 450
+        repeat: false
+        onTriggered: widget.sendWsJson({ "type": "get-song-info" })
     }
 
     Timer {

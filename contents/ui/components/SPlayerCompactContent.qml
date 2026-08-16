@@ -30,7 +30,7 @@ Item {
     implicitWidth: {
         if (widget.autoHidden) return 0;
         var w = widget.fixedWidth > 0 ? widget.fixedWidth : (Kirigami.Units.gridUnit * 10);
-        if (widget.showCover && widget.currentCoverUrl)
+        if (widget.showCover && widget.preferredCoverUrl)
             w += widget.coverSize + paddingH;
         return w;
     }
@@ -42,7 +42,7 @@ Item {
             h += widget.translationFontSize + 4;
             h -= (widget.fontSize * 0.3);
         }
-        if (widget.showCover && widget.currentCoverUrl && widget.coverSize > h)
+        if (widget.showCover && widget.preferredCoverUrl && widget.coverSize > h)
             return Math.max(h, widget.coverSize + paddingV * 2);
         return h;
     }
@@ -140,14 +140,14 @@ Item {
         layoutDirection: widget.coverAlign === "right" ? Qt.RightToLeft : Qt.LeftToRight
 
         Item {
-            visible: widget.showCover && widget.currentCoverUrl !== ""
+            visible: widget.showCover && widget.preferredCoverUrl !== ""
             Layout.preferredWidth: widget.coverSize
             Layout.preferredHeight: widget.coverSize
             Layout.alignment: Qt.AlignVCenter
 
             Image {
                 anchors.fill: parent
-                source: widget.currentCoverUrl
+                source: widget.preferredCoverUrl
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 cache: false
@@ -157,7 +157,7 @@ Item {
             Image {
                 id: roundedCover
                 anchors.fill: parent
-                source: widget.currentCoverUrl
+                source: widget.preferredCoverUrl
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 cache: false

@@ -32,6 +32,11 @@ Item {
     property bool fullAlbumCoverRounded: plasmoid.configuration.fullAlbumCoverRounded
     property int albumCoverRadius: plasmoid.configuration.fullAlbumCoverRadius
     property bool showSPlayerLyrics: plasmoid.configuration.showSPlayerLyricsInFullView
+    readonly property bool showSPlayerMedia: widget.splayerOnline
+    readonly property string mediaTitle: showSPlayerMedia ? widget.currentSong : player.title
+    readonly property string mediaArtists: showSPlayerMedia ? widget.currentArtist : player.artists
+    readonly property string mediaAlbum: showSPlayerMedia ? "" : player.album
+    readonly property string mediaArtUrl: widget.preferredCoverUrl
 
     // Override min width if visible content (e.g. playback controls) needs more space
     readonly property int contentMinWidth: row.visible ? row.implicitWidth + 40 : 0
@@ -63,7 +68,7 @@ Item {
             width: parent.width
             fillMode: Image.PreserveAspectCrop
             placeholderSource: albumPlaceholder
-            imageSource: player.artUrl
+            imageSource: root.mediaArtUrl
 
             onStatusChanged: {
                 if (status === Image.Ready) {
@@ -156,7 +161,7 @@ Item {
                 fillMode: Image.PreserveAspectFit
 
                 placeholderSource: albumPlaceholder
-                imageSource: player.artUrl
+                imageSource: root.mediaArtUrl
 
                 layer.enabled: root.fullAlbumCoverRounded && root.albumCoverRadius > 0
                 layer.effect: OpacityMask {
@@ -181,9 +186,9 @@ Item {
             Layout.bottomMargin: 5
             textAlignment: songTextAlignment
             scrollingSpeed: plasmoid.configuration.fullViewTextScrollingSpeed
-            title: player.title
-            artists: player.artists
-            album: player.album
+            title: root.mediaTitle
+            artists: root.mediaArtists
+            album: root.mediaAlbum
             textFont: baseFont
             maxWidth: width
             titlePosition: plasmoid.configuration.fullTitlePosition
@@ -218,9 +223,9 @@ Item {
             Layout.topMargin: 5
             textAlignment: songTextAlignment
             scrollingSpeed: plasmoid.configuration.fullViewTextScrollingSpeed
-            title: player.title
-            artists: player.artists
-            album: player.album
+            title: root.mediaTitle
+            artists: root.mediaArtists
+            album: root.mediaAlbum
             textFont: baseFont
             maxWidth: songText.width
             titlePosition: plasmoid.configuration.fullTitlePosition
@@ -262,14 +267,14 @@ Item {
                 spacing: 4
 
                 RowLayout {
-                    visible: widget.showCover && widget.currentCoverUrl !== ""
+                    visible: widget.showCover && widget.preferredCoverUrl !== ""
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
 
                     Image {
                         Layout.preferredWidth: Math.min(widget.coverSize * 2, 80)
                         Layout.preferredHeight: Layout.preferredWidth
-                        source: widget.currentCoverUrl
+                        source: widget.preferredCoverUrl
                         fillMode: Image.PreserveAspectFit
                         mipmap: true
                         cache: false
@@ -408,29 +413,29 @@ Item {
 
                 CommandIcon {
                     visible: playbackControlsVisible
-                    enabled: player.canGoPrevious
+                    enabled: widget.splayerControlsAvailable || player.canGoPrevious
                     Layout.alignment: Qt.AlignHCenter
                     size: Kirigami.Units.iconSizes.medium
                     source: "media-skip-backward"
-                    onClicked: player.previous()
+                    onClicked: widget.previousTrack()
                 }
 
                 CommandIcon {
                     visible: playbackControlsVisible
-                    enabled: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
+                    enabled: widget.splayerControlsAvailable || (player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay)
                     Layout.alignment: Qt.AlignHCenter
                     size: Kirigami.Units.iconSizes.large
-                    source: player.playbackStatus === Mpris.PlaybackStatus.Playing ? "media-playback-pause" : "media-playback-start"
-                    onClicked: player.playPause()
+                    source: (widget.splayerControlsAvailable ? widget.isPlaying : player.playbackStatus === Mpris.PlaybackStatus.Playing) ? "media-playback-pause" : "media-playback-start"
+                    onClicked: widget.togglePlayback()
                 }
 
                 CommandIcon {
                     visible: playbackControlsVisible
-                    enabled: player.canGoNext
+                    enabled: widget.splayerControlsAvailable || player.canGoNext
                     Layout.alignment: Qt.AlignHCenter
                     size: Kirigami.Units.iconSizes.medium
                     source: "media-skip-forward"
-                    onClicked: player.next()
+                    onClicked: widget.nextTrack()
                 }
 
                 CommandIcon {

@@ -98,16 +98,16 @@ Item {
         onClicked: (mouse) => {
             switch (mouse.button) {
             case Qt.MiddleButton:
-                player.playPause()
+                widget.togglePlayback()
                 break
             case Qt.BackButton:
-                if (player.canGoPrevious) {
-                    player.previous();
+                if (widget.splayerControlsAvailable || player.canGoPrevious) {
+                    widget.previousTrack();
                 }
                 break
             case Qt.ForwardButton:
-                if (player.canGoNext) {
-                    player.next();
+                if (widget.splayerControlsAvailable || player.canGoNext) {
+                    widget.nextTrack();
                 }
                 break
             default:
@@ -160,7 +160,7 @@ Item {
 
             size: compact.iconSize
             icon: plasmoid.configuration.panelIcon
-            imageUrl: player.artUrl
+            imageUrl: widget.preferredCoverUrl
             imageRadius: plasmoid.configuration.albumCoverRadius
             fallbackToIconWhenImageNotAvailable: plasmoid.configuration.fallbackToIconWhenArtNotAvailable
             type: {
@@ -270,36 +270,36 @@ Item {
                 visible: plasmoid.configuration.skipBackwardControlInPanel
                 Layout.alignment : Qt.AlignVCenter | Qt.AlignHCenter
 
-                enabled: player.canGoPrevious
+                enabled: widget.splayerControlsAvailable || player.canGoPrevious
                 icon.name: "media-skip-backward"
                 icon.color: foregroundColor
                 implicitWidth: compact.controlsSize
                 implicitHeight: compact.controlsSize
-                onClicked: player.previous()
+                onClicked: widget.previousTrack()
             }
 
             PlasmaComponents3.ToolButton {
                 visible: plasmoid.configuration.playPauseControlInPanel
                 Layout.alignment : Qt.AlignVCenter | Qt.AlignHCenter
 
-                enabled: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
+                enabled: widget.splayerControlsAvailable || (player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay)
                 implicitWidth: compact.controlsSize
                 implicitHeight: compact.controlsSize
-                icon.name: player.playbackStatus === Mpris.PlaybackStatus.Playing ? "media-playback-pause" : "media-playback-start"
+                icon.name: (widget.splayerControlsAvailable ? widget.isPlaying : player.playbackStatus === Mpris.PlaybackStatus.Playing) ? "media-playback-pause" : "media-playback-start"
                 icon.color: foregroundColor
-                onClicked: player.playPause()
+                onClicked: widget.togglePlayback()
             }
 
             PlasmaComponents3.ToolButton {
                 visible: plasmoid.configuration.skipForwardControlInPanel
                 Layout.alignment : Qt.AlignVCenter | Qt.AlignHCenter
 
-                enabled: player.canGoNext
+                enabled: widget.splayerControlsAvailable || player.canGoNext
                 implicitWidth: compact.controlsSize
                 implicitHeight: compact.controlsSize
                 icon.name: "media-skip-forward"
                 icon.color: foregroundColor
-                onClicked: player.next()
+                onClicked: widget.nextTrack()
             }
         }
     }
