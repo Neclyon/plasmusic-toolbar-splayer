@@ -23,10 +23,8 @@ PlasmoidItem {
     // =========================================================================
     // SPlayer WebSocket properties
     // =========================================================================
-    property bool wsEnabled: plasmoid.configuration.wsEnabled
     property string wsUrl: plasmoid.configuration.wsUrl
     property int wsReconnectIntervalMs: plasmoid.configuration.wsReconnectIntervalMs
-    property string wsDisplayMode: plasmoid.configuration.wsDisplayMode
     property string textAlign: plasmoid.configuration.textAlign ? plasmoid.configuration.textAlign : "center"
     property int fixedWidth: plasmoid.configuration.fixedWidth
     property int fixedHeight: plasmoid.configuration.fixedHeight
@@ -81,7 +79,6 @@ PlasmoidItem {
     property real wordOutOpacity: 0
     property real lastFrameTimestamp: 0
     property real lastLyricUpdateTimestamp: 0
-    property string singleLineText: ""
 
     // =========================================================================
     // SPlayer WebSocket functions
@@ -134,11 +131,6 @@ PlasmoidItem {
         ensureWsClient();
         if (!wsClient)
             return;
-        if (!wsEnabled) {
-            wsReconnectTimer.running = false;
-            wsClient.active = false;
-            return;
-        }
         if (wsClient.url !== wsUrl) {
             wsClient.active = false;
             wsClient.url = wsUrl;
@@ -165,8 +157,6 @@ PlasmoidItem {
     }
 
     function onWsDisconnected() {
-        if (!wsEnabled)
-            return;
         wsReconnectTimer.running = true;
         isPlaying = false;
         splayerOnline = false;
@@ -187,7 +177,7 @@ PlasmoidItem {
     }
 
     // Prefer the configured SPlayer WebSocket while it is online, then use MPRIS.
-    readonly property bool splayerControlsAvailable: wsEnabled && splayerOnline && wsClient !== null
+    readonly property bool splayerControlsAvailable: splayerOnline && wsClient !== null
 
     function sendSPlayerControl(command) {
         if (!splayerControlsAvailable)
@@ -320,7 +310,6 @@ PlasmoidItem {
                 noLyricClearTimer.restart();
             }
             checkCurrentLine();
-            updateDisplayText();
             updateAutoHideState();
             return;
         }
@@ -339,7 +328,6 @@ PlasmoidItem {
         if (type === "progress-change") {
             if (data.currentTime !== undefined) {
                 syncTime(Number(data.currentTime) || 0);
-                updateDisplayText();
                 resetAutoHideActivity();
             }
             return;
@@ -348,7 +336,6 @@ PlasmoidItem {
             noLyricClearTimer.stop();
             handleLyricPayload(data);
             checkCurrentLine();
-            updateDisplayText();
             return;
         }
     }
@@ -454,28 +441,6 @@ PlasmoidItem {
         }
     }
 
-    function updateDisplayText() {
-        if (!wsEnabled)
-            return;
-        if (!wsSupported) {
-            singleLineText = "WebSocket not available";
-            return;
-        }
-        if (wsDisplayMode === "song") {
-            if (currentSong && currentArtist)
-                singleLineText = currentSong + " - " + currentArtist;
-            else if (currentSong)
-                singleLineText = currentSong;
-            else
-                singleLineText = "";
-            return;
-        }
-        if (wsDisplayMode === "artist") {
-            singleLineText = currentArtist || "";
-            return;
-        }
-        singleLineText = "";
-    }
 
     function wordKeyFor(words) {
         if (!words || words.length <= 0)
@@ -561,7 +526,7 @@ PlasmoidItem {
         id: smoothTimer
         interval: 16
         repeat: true
-        running: widget.isPlaying && widget.wsEnabled
+        running: widget.isPlaying
         onRunningChanged: {
             if (running)
                 widget.lastFrameTimestamp = Date.now();
@@ -672,19 +637,11 @@ PlasmoidItem {
     // =========================================================================
     // Reactive handlers
     // =========================================================================
-    onWsEnabledChanged: {
-        if (!wsEnabled)
-            splayerOnline = false;
-        tryReconnectWs();
-    }
     onWsUrlChanged: tryReconnectWs()
     onWsReconnectIntervalMsChanged: tryReconnectWs()
-    onWsDisplayModeChanged: updateDisplayText()
     Component.onCompleted: ensureWsClient()
     onAutoHideDelayChanged: updateAutoHideState()
     onIsPlayingChanged: updateAutoHideState()
-    onCurrentSongChanged: updateDisplayText()
-    onCurrentArtistChanged: updateDisplayText()
     onSplayerOnlineChanged: {
         Plasmoid.status = (showWhenNoMedia || player.ready || splayerOnline) ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
     }
@@ -720,11 +677,6 @@ PlasmoidItem {
 
     Player {
         id: player
-        sourceIdentity: {
-            if (!plasmoid.configuration.choosePlayerAutomatically) {
-                return plasmoid.configuration.preferredPlayerIdentity
-            }
-        }
         onReadyChanged: {
             Plasmoid.status = (showWhenNoMedia || player.ready || splayerOnline) ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
         }

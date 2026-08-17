@@ -197,17 +197,18 @@ Item {
 
                         Item {
                             anchors.fill: parent
-                            visible: !widget.splayerOnline || (widget.wsDisplayMode === "lyric" && !widget.hasLyrics)
+                            visible: !widget.splayerOnline || !widget.hasLyrics
                             Row {
                                 spacing: 0
                                 x: root.staticX(clipItem.width, fallbackText.implicitWidth)
                                 y: (lyricLayer.height - fallbackText.implicitHeight) / 2
                                 Text {
                                     id: fallbackText
-                                    text: widget.splayerOnline ? (widget.currentSong && widget.currentArtist ? widget.currentSong + " - " + widget.currentArtist : widget.currentSong || "SPlayer Connected") : ""
+                                    text: widget.splayerOnline ? (widget.currentSong || "SPlayer Connected") : ""
                                     color: widget.unplayedColor
                                     font.pixelSize: widget.fontSize - 3
                                     font.bold: true
+                                    font.family: widget.fontFamily
                                     verticalAlignment: Text.AlignVCenter
                                 }
                             }
@@ -227,17 +228,7 @@ Item {
                                 x: root.staticX(clipItem.width, wordOutRow.implicitWidth)
                                 y: (lyricLayer.height - wordOutRow.implicitHeight) / 2
 
-                                Text {
-                                    visible: widget.wsDisplayMode !== "lyric"
-                                    text: widget.singleLineText
-                                    color: widget.unplayedColor
-                                    font.pixelSize: widget.fontSize - 3
-                                    font.bold: true
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-
                                 Repeater {
-                                    visible: widget.wsDisplayMode === "lyric"
                                     model: widget.prevWordList ? widget.prevWordList : []
                                     delegate: wordDelegate
                                 }
@@ -261,7 +252,7 @@ Item {
                                 id: wordInRow
                                 spacing: 0
                                 x: {
-                                    if (!widget.splayerOnline || widget.wsDisplayMode !== "lyric")
+                                    if (!widget.splayerOnline)
                                         return root.staticX(clipItem.width, wordInRow.implicitWidth);
                                     var maxOffset = Math.max(0, wordInRow.implicitWidth - clipItem.width);
                                     if (maxOffset <= 0)
@@ -285,17 +276,7 @@ Item {
                                 }
                                 y: (lyricLayer.height - wordInRow.implicitHeight) / 2
 
-                                Text {
-                                    visible: widget.wsDisplayMode !== "lyric"
-                                    text: widget.singleLineText
-                                    color: widget.unplayedColor
-                                    font.pixelSize: widget.fontSize - 3
-                                    font.bold: true
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-
                                 Repeater {
-                                    visible: widget.wsDisplayMode === "lyric"
                                     model: widget.wordList ? widget.wordList : []
                                     delegate: wordDelegate
                                 }
@@ -312,7 +293,7 @@ Item {
 
                 Text {
                     id: translationText
-                    visible: widget.showTranslation && widget.translatedText !== "" && widget.wsDisplayMode === "lyric"
+                    visible: widget.showTranslation && widget.translatedText !== ""
                     width: parent.width
                     text: widget.translatedText
                     color: widget.unplayedColor

@@ -6,10 +6,6 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 
 KCM.SimpleKCM {
-    property bool cfg_wsEnabled
-    property string cfg_wsUrl
-    property int cfg_wsReconnectIntervalMs
-    property string cfg_wsDisplayMode
     property int cfg_fixedWidth
     property int cfg_fixedHeight
     property int cfg_fontSize
@@ -28,67 +24,40 @@ KCM.SimpleKCM {
     property int cfg_coverSize
     property int cfg_coverRadius
     property int cfg_autoHideDelay
-    property bool cfg_showSPlayerLyricsInFullView
-    property bool cfg_showSPlayerLyricsInCompact
 
     Kirigami.FormLayout {
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("WebSocket Settings")
+            Kirigami.FormData.label: i18n("Display Contents")
             Kirigami.FormData.isSection: true
         }
 
         CheckBox {
-            text: i18n("Enable WebSocket (SPlayer)")
-            checked: cfg_wsEnabled
-            onToggled: cfg_wsEnabled = checked
+            text: i18n("Show translation (if available)")
+            checked: cfg_showTranslation
+            onToggled: cfg_showTranslation = checked
         }
 
-        TextField {
-            Kirigami.FormData.label: i18n("WebSocket URL:")
-            text: cfg_wsUrl
-            onTextChanged: cfg_wsUrl = text
-            placeholderText: "ws://localhost:25885"
-            enabled: cfg_wsEnabled
+        CheckBox {
+            text: i18n("Show cover art")
+            checked: cfg_showCover
+            onToggled: cfg_showCover = checked
         }
 
-        SpinBox {
-            Kirigami.FormData.label: i18n("Reconnect interval (ms):")
-            from: 500
-            to: 60000
-            stepSize: 500
-            value: cfg_wsReconnectIntervalMs
-            onValueModified: cfg_wsReconnectIntervalMs = value
-            enabled: cfg_wsEnabled
+        CheckBox {
+            text: i18n("Show background")
+            checked: cfg_showBackground
+            onToggled: cfg_showBackground = checked
         }
 
-        ComboBox {
-            id: modeCombo
-            Kirigami.FormData.label: i18n("Display content:")
-            textRole: "text"
-            enabled: cfg_wsEnabled
-            model: [
-                { "text": i18n("Lyrics"), "value": "lyric" },
-                { "text": i18n("Song"), "value": "song" },
-                { "text": i18n("Artist"), "value": "artist" }
-            ]
-            onActivated: cfg_wsDisplayMode = model[currentIndex].value
-            Component.onCompleted: {
-                var v = cfg_wsDisplayMode || "lyric"
-                for (var i = 0; i < model.length; i++) {
-                    if (model[i].value === v) {
-                        currentIndex = i
-                        return
-                    }
-                }
-                currentIndex = 0
-            }
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Layout Settings")
+            Kirigami.FormData.isSection: true
         }
 
         ComboBox {
             id: alignCombo
             Kirigami.FormData.label: i18n("Text alignment:")
             textRole: "text"
-            enabled: cfg_wsEnabled
             model: [
                 { "text": i18n("Center"), "value": "center" },
                 { "text": i18n("Left"), "value": "left" },
@@ -107,45 +76,11 @@ KCM.SimpleKCM {
             }
         }
 
-        CheckBox {
-            text: i18n("Show translation (if available)")
-            checked: cfg_showTranslation
-            onToggled: cfg_showTranslation = checked
-            visible: cfg_wsDisplayMode === "lyric"
-            enabled: cfg_wsEnabled
-        }
-
-        CheckBox {
-            Kirigami.FormData.label: i18n("Show SPlayer lyrics in Compact view:")
-            checked: cfg_showSPlayerLyricsInCompact
-            onToggled: cfg_showSPlayerLyricsInCompact = checked
-            enabled: cfg_wsEnabled
-        }
-
-        CheckBox {
-            Kirigami.FormData.label: i18n("Show SPlayer lyrics in Full view:")
-            checked: cfg_showSPlayerLyricsInFullView
-            onToggled: cfg_showSPlayerLyricsInFullView = checked
-            enabled: cfg_wsEnabled
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Cover Art")
-            Kirigami.FormData.isSection: true
-        }
-
-        CheckBox {
-            text: i18n("Show cover art")
-            checked: cfg_showCover
-            onToggled: cfg_showCover = checked
-            enabled: cfg_wsEnabled
-        }
-
         ComboBox {
             id: coverAlignCombo
             Kirigami.FormData.label: i18n("Cover position:")
             textRole: "text"
-            enabled: cfg_wsEnabled && cfg_showCover
+            enabled: cfg_showCover
             model: [
                 { "text": i18n("Left"), "value": "left" },
                 { "text": i18n("Right"), "value": "right" }
@@ -171,23 +106,7 @@ KCM.SimpleKCM {
             value: cfg_coverSize
             onValueModified: cfg_coverSize = value
             textFromValue: function(value) { return value + " px" }
-            enabled: cfg_wsEnabled && cfg_showCover
-        }
-
-        SpinBox {
-            Kirigami.FormData.label: i18n("Cover corner radius:")
-            from: 0
-            to: 64
-            stepSize: 1
-            value: cfg_coverRadius
-            onValueModified: cfg_coverRadius = value
-            textFromValue: function(value) { return value + " px" }
-            enabled: cfg_wsEnabled && cfg_showCover
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Appearance")
-            Kirigami.FormData.isSection: true
+            enabled: cfg_showCover
         }
 
         SpinBox {
@@ -198,7 +117,6 @@ KCM.SimpleKCM {
             value: cfg_fixedWidth
             onValueModified: cfg_fixedWidth = value
             textFromValue: function(value) { return value === 0 ? i18n("Auto") : value + " px" }
-            enabled: cfg_wsEnabled
         }
 
         SpinBox {
@@ -209,18 +127,37 @@ KCM.SimpleKCM {
             value: cfg_fixedHeight
             onValueModified: cfg_fixedHeight = value
             textFromValue: function(value) { return value === 0 ? i18n("Auto") : value + " px" }
-            enabled: cfg_wsEnabled
         }
 
-        FontDialog {
-            id: fontDialog
-            title: i18n("Select Font")
-            onAccepted: { cfg_fontFamily = currentFont.family }
+        SpinBox {
+            Kirigami.FormData.label: i18n("Line spacing:")
+            from: -20
+            to: 100
+            stepSize: 1
+            value: cfg_lineSpacing
+            onValueModified: cfg_lineSpacing = value
+            textFromValue: function(value) { return value + " px" }
+            visible: cfg_showTranslation
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Appearance Customizations")
+            Kirigami.FormData.isSection: true
+        }
+
+        SpinBox {
+            Kirigami.FormData.label: i18n("Cover corner radius:")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: cfg_coverRadius
+            onValueModified: cfg_coverRadius = value
+            textFromValue: function(value) { return value + " px" }
+            enabled: cfg_showCover
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Font:")
-            enabled: cfg_wsEnabled
             TextField {
                 text: cfg_fontFamily || i18n("Default font")
                 readOnly: true
@@ -250,25 +187,6 @@ KCM.SimpleKCM {
             value: cfg_fontSize
             onValueModified: cfg_fontSize = value
             textFromValue: function(value) { return value + " pt" }
-            enabled: cfg_wsEnabled
-        }
-
-        CheckBox {
-            text: i18n("Show background")
-            checked: cfg_showBackground
-            onToggled: cfg_showBackground = checked
-            enabled: cfg_wsEnabled
-        }
-
-        SpinBox {
-            Kirigami.FormData.label: i18n("Auto-hide after pause (seconds, 0 = off):")
-            from: 0
-            to: 300
-            stepSize: 1
-            value: cfg_autoHideDelay
-            onValueModified: cfg_autoHideDelay = value
-            textFromValue: function(value) { return value === 0 ? i18n("Off") : value + " s" }
-            enabled: cfg_wsEnabled
         }
 
         SpinBox {
@@ -280,26 +198,22 @@ KCM.SimpleKCM {
             onValueModified: cfg_translationFontSize = value
             textFromValue: function(value) { return value === 0 ? i18n("Auto") : value + " pt" }
             visible: cfg_showTranslation
-            enabled: cfg_wsEnabled
         }
 
         SpinBox {
-            Kirigami.FormData.label: i18n("Line spacing:")
-            from: -20
-            to: 100
+            Kirigami.FormData.label: i18n("Auto-hide after pause (seconds, 0 = off):")
+            from: 0
+            to: 300
             stepSize: 1
-            value: cfg_lineSpacing
-            onValueModified: cfg_lineSpacing = value
-            textFromValue: function(value) { return value + " px" }
-            visible: cfg_showTranslation
-            enabled: cfg_wsEnabled
+            value: cfg_autoHideDelay
+            onValueModified: cfg_autoHideDelay = value
+            textFromValue: function(value) { return value === 0 ? i18n("Off") : value + " s" }
         }
 
         ComboBox {
             id: animCombo
             Kirigami.FormData.label: i18n("Transition animation:")
             textRole: "text"
-            enabled: cfg_wsEnabled
             model: [
                 { "text": i18n("Scale + Fade"), "value": "scale" },
                 { "text": i18n("Fade only"), "value": "fade" },
@@ -323,12 +237,11 @@ KCM.SimpleKCM {
             text: i18n("Use custom colors")
             checked: cfg_useCustomColors
             onToggled: cfg_useCustomColors = checked
-            enabled: cfg_wsEnabled
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Colors:")
-            enabled: cfg_wsEnabled && cfg_useCustomColors
+            enabled: cfg_useCustomColors
             Label { text: i18n("Played:") }
             Rectangle {
                 width: 30; height: 20
@@ -356,8 +269,14 @@ KCM.SimpleKCM {
             text: i18n("Click color swatch to change")
             font.pointSize: Kirigami.Theme.smallFont.pointSize
             color: Kirigami.Theme.disabledTextColor
-            visible: cfg_wsEnabled && cfg_useCustomColors
+            visible: cfg_useCustomColors
         }
+    }
+
+    FontDialog {
+        id: fontDialog
+        title: i18n("Select Font")
+        onAccepted: { cfg_fontFamily = currentFont.family }
     }
 
     ColorDialog {

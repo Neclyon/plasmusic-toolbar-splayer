@@ -34,13 +34,15 @@ KCM.SimpleKCM {
     property alias cfg_fullViewMaxWidth: fullViewMaxWidth.value
     property alias cfg_fullAlbumCoverRounded: fullAlbumCoverRounded.checked
     property alias cfg_fullAlbumCoverRadius: fullAlbumCoverRadius.value
+    property alias cfg_useCustomFont: customFontCheckbox.checked
+    property alias cfg_customFont: fontDialog.fontChosen
 
     Kirigami.FormLayout {
         id: form
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Layout")
+            Kirigami.FormData.label: i18n("Display Contents")
         }
 
         CheckBox {
@@ -51,6 +53,80 @@ KCM.SimpleKCM {
         CheckBox {
             id: fullViewProgressBarVisible
             Kirigami.FormData.label: i18n("Show progress bar")
+        }
+
+        CheckBox {
+            id: fullViewSongTextVisible
+            Kirigami.FormData.label: i18n("Show song text")
+        }
+
+        CheckBox {
+            id: fullViewVolumeControlVisible
+            Kirigami.FormData.label: i18n("Show volume control")
+        }
+
+        CheckBox {
+            id: fullViewShuffleVisible
+            Kirigami.FormData.label: i18n("Show shuffle control")
+        }
+
+        CheckBox {
+            id: fullViewPlaybackControlsVisible
+            Kirigami.FormData.label: i18n("Show playback controls")
+        }
+
+        CheckBox {
+            id: fullViewLoopVisible
+            Kirigami.FormData.label: i18n("Show loop control")
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Album placeholder:")
+
+            Button {
+                text: i18n("Choose…")
+                icon.name: "settings-configure"
+                onClicked: {
+                    albumPlaceholderDialog.open()
+                }
+            }
+
+            Button {
+                text: i18n("Clear")
+                icon.name: "edit-delete"
+                visible: albumPlaceholderDialog.value
+                onClicked: {
+                    albumPlaceholderDialog.value = ""
+                }
+            }
+        }
+
+        ColumnLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: albumPlaceholderDialog.value
+            Image {
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 200
+                Layout.alignment: Qt.AlignHCenter
+                source: albumPlaceholderDialog.value
+            }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Hide album name for singles:")
+            CheckBox {
+                id: fullHideAlbumForSingles
+            }
+            Kirigami.ContextualHelpButton {
+                toolTipText: i18n(
+                    "If the album name and the track title match, the album name will be hidden."
+                )
+            }
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Layout Settings")
         }
 
         ButtonGroup {
@@ -95,11 +171,6 @@ KCM.SimpleKCM {
             ButtonGroup.group: fullViewSongTextAlignment
         }
 
-        CheckBox {
-            id: fullViewSongTextVisible
-            Kirigami.FormData.label: i18n("Show song text")
-        }
-
         ButtonGroup {
             id: fullViewSongTextPosition
             property int value: SongAndArtistText.VerticalPosition.UnderProgressBar
@@ -130,26 +201,6 @@ KCM.SimpleKCM {
             ButtonGroup.group: fullViewSongTextPosition
         }
 
-        CheckBox {
-            id: fullViewVolumeControlVisible
-            Kirigami.FormData.label: i18n("Show volume control")
-        }
-
-        CheckBox {
-            id: fullViewShuffleVisible
-            Kirigami.FormData.label: i18n("Show shuffle control")
-        }
-
-        CheckBox {
-            id: fullViewPlaybackControlsVisible
-            Kirigami.FormData.label: i18n("Show playback controls")
-        }
-
-        CheckBox {
-            id: fullViewLoopVisible
-            Kirigami.FormData.label: i18n("Show loop control")
-        }
-
         RowLayout {
             Kirigami.FormData.label: i18n("Fill available space with playback controls")
             CheckBox {
@@ -176,63 +227,6 @@ KCM.SimpleKCM {
             from: fullViewMinWidth.value
             to: 2000
             stepSize: 10
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Album cover")
-        }
-
-        RowLayout {
-            Kirigami.FormData.label: i18n("Album placeholder:")
-
-            Button {
-                text: i18n("Choose…")
-                icon.name: "settings-configure"
-                onClicked: {
-                    albumPlaceholderDialog.open()
-                }
-            }
-
-            Button {
-                text: i18n("Clear")
-                icon.name: "edit-delete"
-                visible: albumPlaceholderDialog.value
-                onClicked: {
-                    albumPlaceholderDialog.value = ""
-                }
-            }
-        }
-
-        ColumnLayout {
-            anchors.horizontalCenter: parent.horizontalCenter
-            visible: albumPlaceholderDialog.value
-            Image {
-                Layout.preferredWidth: 200
-                Layout.preferredHeight: 200
-                Layout.alignment: Qt.AlignHCenter
-                source: albumPlaceholderDialog.value
-            }
-        }
-
-        CheckBox {
-            Kirigami.FormData.label: i18n("Round album cover")
-            id: fullAlbumCoverRounded
-        }
-
-        Slider {
-            Layout.preferredWidth: 10 * Kirigami.Units.gridUnit
-            enabled: fullAlbumCoverRounded.checked
-            id: fullAlbumCoverRadius
-            from: 2
-            to: 26
-            stepSize: 2
-            Kirigami.FormData.label: i18n("Album cover radius:")
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Song Text Customization")
         }
 
         // group for title
@@ -368,21 +362,48 @@ KCM.SimpleKCM {
             ButtonGroup.group: fullAlbumPosition
         }
 
-        RowLayout{
-            Kirigami.FormData.label: i18n("Hide album name for singles:")
-            CheckBox{
-                id: fullHideAlbumForSingles
-            }
-            Kirigami.ContextualHelpButton {
-                toolTipText: i18n(
-                    "If the album name and the track title match, the album name will be hidden."
-                )
-            }
-        }
-        
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Text scrolling")
+            Kirigami.FormData.label: i18n("Appearance Customizations")
+        }
+
+        CheckBox {
+            Kirigami.FormData.label: i18n("Round album cover")
+            id: fullAlbumCoverRounded
+        }
+
+        Slider {
+            Layout.preferredWidth: 10 * Kirigami.Units.gridUnit
+            enabled: fullAlbumCoverRounded.checked
+            id: fullAlbumCoverRadius
+            from: 2
+            to: 26
+            stepSize: 2
+            Kirigami.FormData.label: i18n("Album cover radius:")
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Custom font:")
+
+            CheckBox {
+                id: customFontCheckbox
+            }
+
+            Button {
+                text: i18n("Choose…")
+                icon.name: "settings-configure"
+                enabled: customFontCheckbox.checked
+                onClicked: {
+                    fontDialog.open()
+                }
+            }
+        }
+
+        Label {
+            visible: customFontCheckbox.checked && fontDialog.fontChosen.family && fontDialog.fontChosen.pointSize
+            text: i18n("%1pt %2", fontDialog.fontChosen.pointSize, fontDialog.fontChosen.family)
+            textFormat: Text.PlainText
+            font: fontDialog.fontChosen
         }
 
         Slider {
@@ -391,12 +412,7 @@ KCM.SimpleKCM {
             from: 1
             to: 10
             stepSize: 1
-            Kirigami.FormData.label: i18n("Speed:")
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Background")
+            Kirigami.FormData.label: i18n("Text scrolling speed:")
         }
 
         ButtonGroup {
@@ -461,5 +477,16 @@ KCM.SimpleKCM {
         id: albumPlaceholderDialog
         property var value: null
         onAccepted: value = selectedFile
+    }
+
+    QtDialogs.FontDialog {
+        id: fontDialog
+        title: i18n("Choose a Font")
+        modality: Qt.WindowModal
+        parentWindow: fullConfigPage.Window.window
+        property font fontChosen: Qt.font()
+        onAccepted: {
+            fontChosen = selectedFont
+        }
     }
 }

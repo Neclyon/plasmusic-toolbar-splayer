@@ -4,22 +4,17 @@ import org.kde.plasma.configuration
 ConfigModel {
     ConfigCategory {
         name: i18n("General")
-        icon: "preferences-system-windows-behavior"
+        icon: "systemsettings"
         source: "config/General.qml"
     }
     ConfigCategory {
-        name: i18n("Panel View")
-        icon: "preferences-system-windows-effect-screenedge"
-        source: "config/Compact.qml"
-    }
-    ConfigCategory {
         name: i18n("Full View")
-        icon: "preferences-system-windows-effect-slidingpopups"
+        icon: "preferences-system-windows-behavior"
         source: "config/Full.qml"
     }
     ConfigCategory {
-        name: i18n("SPlayer")
-        icon: "network-connect"
-        source: "config/SPlayer.qml"
+        name: i18n("Panel View")
+        icon: "org.kde.plasma.taskmanager"
+        source: "config/PanelView.qml"
     }
 }

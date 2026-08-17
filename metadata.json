@@ -5,15 +5,23 @@
             {
                 "Email": "catterina.claudio@gmail.com",
                 "Name": "Claudio Catterina"
+            },
+            {
+                "Email": "neclyon038@gmail.com",
+                "Name": "Zhengyuan Huang aka Neclyon"
+            },
+            {
+                "Email": "lrsts@qq.com",
+                "Name": "Suiyuimui aka lrst6963"
             }
         ],
-        "Description": "Show currently playing song information, playback controls, and SPlayer lyrics via WebSocket",
-        "BugReportUrl": "https://github.com/ccatterina/plasmusic-toolbar/issues",
-        "Website": "https://github.com/ccatterina/plasmusic-toolbar",
+        "Description": "Show currently playing song information, playback controls, and SPlayer lyrics via WebSocket.\n这个项目的Panel View UI 参考了 lrst6963 的 Splayer-kde-bar-lyc 项目，Full View UI 则参考了原版 Plasmusic，在此一并感谢。",
+        "BugReportUrl": "https://github.com/Neclyon/plasmusic-toolbar-splayer",
+        "Website": "https://github.com/Neclyon/plasmusic-toolbar-splayer",
         "Icon": "view-media-track",
         "Id": "plasmusic-toolbar",
         "License": "GPL3",
-        "Name": "PlasMusic Toolbar",
+        "Name": "PlasMusic Toolbar SPlayer",
         "Version": "4.1.1",
         "Category": "Multimedia"
     },
